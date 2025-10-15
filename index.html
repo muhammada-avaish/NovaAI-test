@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaAI Chat</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .chat-container {
+    width: 400px;
+    max-width: 90%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .messages p {
+    margin: 6px 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 80%;
+  }
+
+  .messages p.user {
+    background: #DCF8C6;
+    align-self: flex-end;
+  }
+
+  .messages p.bot {
+    background: #eee;
+    align-self: flex-start;
+  }
+
+  .input-area {
+    display: flex;
+    border-top: 1px solid #ddd;
+  }
+
+  #user-input {
+    flex: 1;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    outline: none;
+  }
+
+  #send {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="chat-container">
+  <div id="messages" class="messages"></div>
+  <div class="input-area">
+    <input type="text" id="user-input" placeholder="Ask NovaAI anything..." />
+    <button id="send">Send</button>
+  </div>
+</div>
+
+<script>
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send");
+const messages = document.getElementById("messages");
+
+// Hardcoded SambaNova API key and URL
+const SAMBANOVA_API_KEY = "ce80c012-b203-42dd-ade1-8fb54fe5cb54";
+const SAMBANOVA_BASE_URL = "https://api.sambanova.ai/v1";
+
+sendBtn.addEventListener("click", sendMessage);
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text) return;
+
+  // Show user message
+  const userMsg = document.createElement("p");
+  userMsg.classList.add("user");
+  userMsg.textContent = text;
+  messages.appendChild(userMsg);
+  userInput.value = "";
+
+  try {
+    const res = await fetch("/api/ai/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    const botMsg = document.createElement("p");
+    botMsg.classList.add("bot");
+    botMsg.textContent = data.reply;
+    messages.appendChild(botMsg);
+
+    messages.scrollTop = messages.scrollHeight;
+  } catch (err) {
+    console.error(err);
+    const botMsg = document.createElement("p");
+    botMsg.classList.add("bot");
+    botMsg.textContent = "NovaAI: Error processing your request.";
+    messages.appendChild(botMsg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
+</script>
+</body>
+</html>
